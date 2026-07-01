@@ -1,11 +1,12 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
-from typing import List
-from datetime import datetime
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from alerts import alerts
+from sqlalchemy.orm import Session
+
+from database import Base, engine, SessionLocal
+from models import OTDevice, Alert, Vulnerability
 
 app = FastAPI(title="Industrial Cyber Defense Platform")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -13,82 +14,93 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-@app.get("/alerts")
-def get_alerts():
-    return alerts
 
-class OTDevice(BaseModel):
-    id: int
-    name: str
-    ip_address: str
-    device_type: str
-    vendor: str
-    status: str
-    risk_level: str
-    last_seen: str
+Base.metadata.create_all(bind=engine)
 
-devices = [
-    OTDevice(
-        id=1,
-        name="PLC-1",
-        ip_address="192.168.50.10",
-        device_type="PLC",
-        vendor="OpenPLC",
-        status="Online",
-        risk_level="Low",
-        last_seen=datetime.now().isoformat()
-    ),
-    OTDevice(
-        id=2,
-        name="HMI-1",
-        ip_address="192.168.50.20",
-        device_type="HMI",
-        vendor="Ignition",
-        status="Online",
-        risk_level="Medium",
-        last_seen=datetime.now().isoformat()
-    ),
-    OTDevice(
-        id=3,
-        name="Solar-Inverter-1",
-        ip_address="192.168.50.30",
-        device_type="Inverter",
-        vendor="Simulated",
-        status="Offline",
-        risk_level="High",
-        last_seen=datetime.now().isoformat()
-    ),
-    OTDevice(
-        id=4,
-        name="Historian-1",
-        ip_address="192.168.50.40",
-        device_type="Historian",
-        vendor="InfluxDB",
-        status="Online",
-        risk_level="Low",
-        last_seen=datetime.now().isoformat()
-    )
-]
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 
 @app.get("/")
 def root():
     return {"message": "Industrial Cyber Defense Platform API"}
 
-@app.get("/devices", response_model=List[OTDevice])
-def get_devices():
-    return devices
+
+@app.get("/devices")
+def get_devices(db: Session = Depends(get_db)):
+    return db.query(OTDevice).all()
+
+
+@app.get("/alerts")
+def get_alerts(db: Session = Depends(get_db)):
+    alerts = db.query(Alert).all()
+
+    results = []
+
+    for alert in alerts:
+        results.append({
+            "id": alert.id,
+            "severity": alert.severity,
+            "alert_type": alert.alert_type,
+            "message": alert.message,
+            "status": alert.status,
+            "acknowledged": alert.acknowledged,
+            "time": alert.timestamp,
+            "device_id": alert.device_id,
+            "device": alert.device.name if alert.device else "Unknown"
+        })
+
+    return results
+
+
+@app.get("/vulnerabilities")
+def get_vulnerabilities(db: Session = Depends(get_db)):
+    vulnerabilities = db.query(Vulnerability).all()
+
+    results = []
+
+    for vuln in vulnerabilities:
+        results.append({
+            "id": vuln.id,
+            "device_id": vuln.device_id,
+            "cve_id": vuln.cve_id,
+            "title": vuln.title,
+            "severity": vuln.severity,
+            "cvss_score": vuln.cvss_score,
+            "status": vuln.status,
+            "recommendation": vuln.recommendation,
+            "created_at": vuln.created_at
+        })
+
+    return results
+
 
 @app.get("/dashboard")
-def dashboard():
+def dashboard(db: Session = Depends(get_db)):
+    devices = db.query(OTDevice).all()
+    alerts = db.query(Alert).all()
+    vulnerabilities = db.query(Vulnerability).all()
+
     total = len(devices)
     online = len([d for d in devices if d.status == "Online"])
     offline = len([d for d in devices if d.status == "Offline"])
-    high_risk = len([d for d in devices if d.risk_level == "High"])
+    high_risk = len([d for d in devices if d.risk_level in ["High", "Critical"]])
+    open_alerts = len([a for a in alerts if a.status == "Open"])
+    critical_alerts = len([a for a in alerts if a.severity == "Critical"])
+    open_vulnerabilities = len([v for v in vulnerabilities if v.status == "Open"])
 
     return {
         "total_devices": total,
         "online_devices": online,
         "offline_devices": offline,
         "high_risk_devices": high_risk,
-        "overall_status": "Attention Required" if offline or high_risk else "Healthy"
+        "open_alerts": open_alerts,
+        "critical_alerts": critical_alerts,
+        "open_vulnerabilities": open_vulnerabilities,
+        "overall_status": "Attention Required" if offline or high_risk or critical_alerts else "Healthy"
     }

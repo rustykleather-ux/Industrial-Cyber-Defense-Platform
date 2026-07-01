@@ -5,28 +5,37 @@ import "./App.css";
 function App() {
   const [devices, setDevices] = useState([]);
   const [dashboard, setDashboard] = useState(null);
-  const [alets,setAlerts] = useState([])
+  const [alerts, setAlerts] = useState([]);
 
   useEffect(() => {
-    axios.get("http://127.0.0.1:8000/devices")
-      .then(res => setDevices(res.data))
-      .catch(err => console.error(err));
+    loadData();
+  }, []);
 
-    axios.get("http://127.0.0.1:8000/dashboard")
-      .then(res => setDashboard(res.data))
-      .catch(err => console.error(err));
-  
-    axios.get("http://127.0.0.1:8000/alets")
-      .then(res => setAlerts(res.data))
-  
-    }, []);
+  const loadData = () => {
+    axios
+      .get("http://127.0.0.1:8000/devices")
+      .then((res) => setDevices(res.data))
+      .catch((err) => console.error("Devices Error:", err));
 
+    axios
+      .get("http://127.0.0.1:8000/dashboard")
+      .then((res) => setDashboard(res.data))
+      .catch((err) => console.error("Dashboard Error:", err));
+
+    axios
+      .get("http://127.0.0.1:8000/alerts")
+      .then((res) => setAlerts(res.data))
+      .catch((err) => console.error("Alerts Error:", err));
+  };
 
   return (
     <div className="app">
       <h1>Industrial Cyber Defense Platform</h1>
-      <p className="subtitle">OT / IT Security Monitoring Dashboard</p>
+      <p className="subtitle">
+        OT / IT Security Monitoring Dashboard
+      </p>
 
+      {/* Dashboard Cards */}
       {dashboard && (
         <div className="cards">
           <div className="card">
@@ -35,22 +44,23 @@ function App() {
           </div>
 
           <div className="card">
-            <span>Online</span>
+            <span>Online Devices</span>
             <strong>{dashboard.online_devices}</strong>
           </div>
 
           <div className="card warning">
-            <span>Offline</span>
+            <span>Offline Devices</span>
             <strong>{dashboard.offline_devices}</strong>
           </div>
 
           <div className="card danger">
-            <span>High Risk</span>
+            <span>High Risk Devices</span>
             <strong>{dashboard.high_risk_devices}</strong>
           </div>
         </div>
       )}
 
+      {/* Device Inventory */}
       <h2>OT Asset Inventory</h2>
 
       <table>
@@ -62,26 +72,14 @@ function App() {
             <th>Vendor</th>
             <th>Status</th>
             <th>Risk</th>
+            <th>Firmware</th>
+            <th>Location</th>
             <th>Last Seen</th>
           </tr>
         </thead>
 
-      <h2>Recent Security Alerts</h2>
-
-<div className="alerts">
-    {alerts.map(alert => (
-        <div className={`alert ${alert.severity.toLowerCase()}`} key={alert.id}>
-            <strong>{alert.severity}</strong>
-
-            <p>{alert.device}</p>
-
-            <span>{alert.message}</span>
-        </div>
-    ))}
-</div>
-
         <tbody>
-          {devices.map(device => (
+          {devices.map((device) => (
             <tr key={device.id}>
               <td>{device.name}</td>
               <td>{device.ip_address}</td>
@@ -89,11 +87,51 @@ function App() {
               <td>{device.vendor}</td>
               <td>{device.status}</td>
               <td>{device.risk_level}</td>
-              <td>{new Date(device.last_seen).toLocaleString()}</td>
+              <td>{device.firmware_version}</td>
+              <td>{device.location}</td>
+              <td>
+                {device.last_seen
+                  ? new Date(device.last_seen).toLocaleString()
+                  : "Unknown"}
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      {/* Security Alerts */}
+      <h2>Active Security Alerts</h2>
+
+      <div className="alerts">
+        {alerts.length === 0 ? (
+          <div className="alert">
+            <strong>No Active Alerts</strong>
+          </div>
+        ) : (
+          alerts.map((alert) => (
+            <div
+              key={alert.id}
+              className={`alert ${alert.severity.toLowerCase()}`}
+            >
+              <h3>{alert.device}</h3>
+
+              <p>
+                <strong>Severity:</strong> {alert.severity}
+              </p>
+
+              <p>
+                <strong>Alert:</strong> {alert.message}
+              </p>
+
+              <small>
+                {alert.time
+                  ? new Date(alert.time).toLocaleString()
+                  : "Unknown"}
+              </small>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }

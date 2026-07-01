@@ -1,16 +1,19 @@
+from fastapi import APIRouter
 from datetime import datetime
+
+router = APIRouter()
 
 alerts = [
     {
-        "id" : 1,
+        "id": 1,
         "severity": "Critical",
         "device": "PLC-2",
-        "message": "Firmware is outdate",
+        "message": "Firmware is outdated",
         "time": datetime.now().isoformat()
     },
     {
         "id": 2,
-        "serverity": "High",
+        "severity": "High",
         "device": "Solar Inverter",
         "message": "Communication Lost",
         "time": datetime.now().isoformat()
@@ -23,3 +26,7 @@ alerts = [
         "time": datetime.now().isoformat()
     }
 ]
+
+@router.get("/alerts")
+def get_alerts():
+    return alerts
