@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List
 from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
+from alerts import alerts
 
 app = FastAPI(title="Industrial Cyber Defense Platform")
 app.add_middleware(
@@ -12,6 +13,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+@app.get("/alerts")
+def get_alerts():
+    return alerts
+
 class OTDevice(BaseModel):
     id: int
     name: str

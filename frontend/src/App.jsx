@@ -5,6 +5,7 @@ import "./App.css";
 function App() {
   const [devices, setDevices] = useState([]);
   const [dashboard, setDashboard] = useState(null);
+  const [alets,setAlerts] = useState([])
 
   useEffect(() => {
     axios.get("http://127.0.0.1:8000/devices")
@@ -14,7 +15,12 @@ function App() {
     axios.get("http://127.0.0.1:8000/dashboard")
       .then(res => setDashboard(res.data))
       .catch(err => console.error(err));
-  }, []);
+  
+    axios.get("http://127.0.0.1:8000/alets")
+      .then(res => setAlerts(res.data))
+  
+    }, []);
+
 
   return (
     <div className="app">
@@ -59,6 +65,20 @@ function App() {
             <th>Last Seen</th>
           </tr>
         </thead>
+
+      <h2>Recent Security Alerts</h2>
+
+<div className="alerts">
+    {alerts.map(alert => (
+        <div className={`alert ${alert.severity.toLowerCase()}`} key={alert.id}>
+            <strong>{alert.severity}</strong>
+
+            <p>{alert.device}</p>
+
+            <span>{alert.message}</span>
+        </div>
+    ))}
+</div>
 
         <tbody>
           {devices.map(device => (

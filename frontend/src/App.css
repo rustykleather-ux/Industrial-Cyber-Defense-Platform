@@ -18,6 +18,35 @@ h1 {
   margin-bottom: 25px;
 }
 
+.alerts {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.alert {
+    background: white;
+    border-left: 6px solid gray;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.alert.critical {
+    border-left-color: #dc2626;
+}
+
+.alert.high {
+    border-left-color: #ea580c;
+}
+
+.alert.medium {
+    border-left-color: #eab308;
+}
+
+.alert.low {
+    border-left-color: #16a34a;
+}
 .cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
