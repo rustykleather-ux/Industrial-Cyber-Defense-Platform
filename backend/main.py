@@ -5,6 +5,7 @@ from services.risk_engine import calculate_device_risk
 from database import Base, engine, SessionLocal
 from models import OTDevice, Alert, Vulnerability
 from datetime import datetime
+import random
 
 app = FastAPI(title="Industrial Cyber Defense Platform")
 
@@ -236,3 +237,64 @@ def simulate_attack(attack_type: str, db: Session = Depends(get_db)):
             "network-scan"
         ]
     }
+
+@app.get("/plant-status")
+def plant_status(db: Session = Depends(get_db)):
+    devices = db.query(OTDevice).all()
+
+    status_data = []
+
+    for device in devices:
+        if device.device_type == "PLC":
+            status_data.append({
+                "device": device.name,
+                "type": device.device_type,
+                "status": device.status,
+                "temperature": random.randint(68, 88),
+                "cpu_usage": random.randint(15, 75),
+                "memory_usage": random.randint(25, 85),
+                "network_latency": random.randint(1, 15),
+                "timestamp": datetime.utcnow()
+            })
+
+        elif device.device_type == "Inverter":
+            if device.status == "Offline":
+                power_output = 0
+            else:
+                power_output = random.randint(350, 475)
+
+            status_data.append({
+                "device": device.name,
+                "type": device.device_type,
+                "status": device.status,
+                "power_output_kw": power_output,
+                "voltage": random.randint(380, 480),
+                "network_latency": random.randint(1, 20),
+                "timestamp": datetime.utcnow()
+            })
+
+        elif device.device_type == "SCADA":
+            status_data.append({
+                "device": device.name,
+                "type": device.device_type,
+                "status": device.status,
+                "cpu_usage": random.randint(20, 65),
+                "memory_usage": random.randint(35, 80),
+                "active_sessions": random.randint(1, 8),
+                "network_latency": random.randint(1, 10),
+                "timestamp": datetime.utcnow()
+            })
+
+        elif device.device_type == "Workstation":
+            status_data.append({
+                "device": device.name,
+                "type": device.device_type,
+                "status": device.status,
+                "cpu_usage": random.randint(10, 90),
+                "memory_usage": random.randint(30, 90),
+                "failed_logins": random.randint(0, 5),
+                "network_latency": random.randint(1, 25),
+                "timestamp": datetime.utcnow()
+            })
+
+    return status_data

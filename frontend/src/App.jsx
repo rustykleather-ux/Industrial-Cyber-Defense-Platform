@@ -7,12 +7,18 @@ function App() {
   const [dashboard, setDashboard] = useState(null);
   const [alerts, setAlerts] = useState([]);
   const [vulnerabilities, setVulnerabilities] = useState([]);
+  const[plantStatus, setPlantStatus] = useState([])
 
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = () => {
+    axios
+    .get("http://127.0.0.1:8000/Plant-Status")
+    .then((res) => setPlantStatus(res.data))
+    .catch((err) => console.error("Plant Status Error", err));
+
     axios
       .get("http://127.0.0.1:8000/devices")
       .then((res) => setDevices(res.data))
@@ -34,6 +40,17 @@ function App() {
       .catch((err) => console.error("Alerts Error:", err));
   };  
 
+useEffect(() => {
+  const interval = setInterval(() => {
+    axios
+      .get("http://127.0.0.1:8000/plant-status")
+      .then((res) => setPlantStatus(res.data))
+      .catch((err) => console.error("Plant Status Refresh Error:", err));
+  }, 3000);
+
+  return () => clearInterval(interval);
+}, []);
+
     const simulateAttack = (attackType) => {
     axios
       .post(`http://127.0.0.1:8000/simulate-attack/${attackType}`)
@@ -43,6 +60,23 @@ function App() {
       .catch((err) => console.error("Simulation Error:", err));
   };
   
+  const getDevice = (name) => {
+    return devices.find((device) => device.name === name);
+  };
+
+  const getNodeClass = (device) => {
+    if (!device) return "unknown";
+
+    if (device.status === "Offline") return "critical";
+
+    const risk = device.calculated_risk || device.risk_level;
+
+    if (risk === "Critical") return "critical";
+    if (risk === "High") return "warning";
+    if (risk === "Medium") return "medium";
+
+    return "healthy";
+  };
 
 
  
@@ -102,6 +136,125 @@ function App() {
           🌐 Network Scan
         </button>
       </div>
+
+    <h2>OT Network Topology</h2>
+
+<div className="topology">
+  <div className="topology-node firewall">Firewall</div>
+
+  <div className="topology-line"></div>
+
+  <div className={`topology-node ${getNodeClass(getDevice("SCADA Server"))}`}>
+    SCADA Server
+    <span>{getDevice("SCADA Server")?.ip_address || "Unknown IP"}</span>
+  </div>
+
+  <div className="topology-branches">
+    <div className="branch">
+      <div className="topology-line"></div>
+      <div className={`topology-node ${getNodeClass(getDevice("PLC-1"))}`}>
+        PLC-1
+        <span>{getDevice("PLC-1")?.ip_address || "Unknown IP"}</span>
+      </div>
+    </div>
+
+    <div className="branch">
+      <div className="topology-line"></div>
+      <div className={`topology-node ${getNodeClass(getDevice("PLC-2"))}`}>
+        PLC-2
+        <span>{getDevice("PLC-2")?.ip_address || "Unknown IP"}</span>
+      </div>
+    </div>
+
+    <div className="branch">
+      <div className="topology-line"></div>
+      <div className={`topology-node ${getNodeClass(getDevice("Solar Inverter"))}`}>
+        Solar Inverter
+        <span>{getDevice("Solar Inverter")?.ip_address || "Unknown IP"}</span>
+      </div>
+    </div>
+  </div>
+
+  <div className="topology-branches">
+    <div className="branch">
+      <div className="topology-line"></div>
+      <div className={`topology-node ${getNodeClass(getDevice("Engineering Workstation"))}`}>
+        Engineering Workstation
+        <span>
+          {getDevice("Engineering Workstation")?.ip_address || "Unknown IP"}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>     
+  
+  <h2>Live Plant Status</h2>
+
+<div className="plant-grid">
+  {plantStatus.map((item, index) => (
+    <div key={index} className={`plant-card ${item.status?.toLowerCase()}`}>
+      <h3>{item.device}</h3>
+      <p className="plant-type">{item.type}</p>
+
+      <p>
+        <strong>Status:</strong> {item.status}
+      </p>
+
+      {item.temperature !== undefined && (
+        <p>
+          <strong>Temperature:</strong> {item.temperature}°F
+        </p>
+      )}
+
+      {item.power_output_kw !== undefined && (
+        <p>
+          <strong>Power Output:</strong> {item.power_output_kw} kW
+        </p>
+      )}
+
+      {item.voltage !== undefined && (
+        <p>
+          <strong>Voltage:</strong> {item.voltage} V
+        </p>
+      )}
+
+      {item.cpu_usage !== undefined && (
+        <p>
+          <strong>CPU:</strong> {item.cpu_usage}%
+        </p>
+      )}
+
+      {item.memory_usage !== undefined && (
+        <p>
+          <strong>Memory:</strong> {item.memory_usage}%
+        </p>
+      )}
+
+      {item.active_sessions !== undefined && (
+        <p>
+          <strong>Active Sessions:</strong> {item.active_sessions}
+        </p>
+      )}
+
+      {item.failed_logins !== undefined && (
+        <p>
+          <strong>Failed Logins:</strong> {item.failed_logins}
+        </p>
+      )}
+
+      <p>
+        <strong>Latency:</strong> {item.network_latency} ms
+      </p>
+
+      <small>
+        Updated:{" "}
+        {item.timestamp
+          ? new Date(item.timestamp).toLocaleTimeString()
+          : "Unknown"}
+      </small>
+    </div>
+  ))}
+</div>
 
       {/* Device Inventory */}
       <h2>OT Asset Inventory</h2>

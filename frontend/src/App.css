@@ -147,3 +147,134 @@ th {
   background: #dcfce7;
   color: #166534;
 }
+.topology {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  margin-bottom: 35px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+.topology-node {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 160px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  background: #dcfce7;
+  color: #166534;
+  font-weight: bold;
+  border: 2px solid #16a34a;
+}
+
+.topology-node span {
+  font-size: 12px;
+  font-weight: normal;
+  margin-top: 4px;
+  color: #374151;
+}
+
+.topology-node.firewall {
+  background: #e0e7ff;
+  color: #3730a3;
+  border-color: #4f46e5;
+}
+
+.topology-node.scada {
+  background: #dbeafe;
+  color: #1e40af;
+  border-color: #2563eb;
+}
+
+.topology-node.warning {
+  background: #fef9c3;
+  color: #854d0e;
+  border-color: #eab308;
+}
+
+.topology-node.critical {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #dc2626;
+}
+
+.topology-line {
+  width: 3px;
+  height: 35px;
+  background: #9ca3af;
+  margin: 0 auto;
+}
+
+.topology-branches {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.branch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.topology-node.healthy {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #16a34a;
+}
+
+.topology-node.medium {
+  background: #fef9c3;
+  color: #854d0e;
+  border-color: #eab308;
+}
+
+.topology-node.unknown {
+  background: #e5e7eb;
+  color: #374151;
+  border-color: #9ca3af;
+}
+
+.plant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 35px;
+}
+
+.plant-card {
+  background: white;
+  border-radius: 10px;
+  padding: 18px;
+  border-left: 6px solid #16a34a;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.plant-card h3 {
+  margin: 0 0 4px 0;
+}
+
+.plant-type {
+  color: #6b7280;
+  margin-top: 0;
+}
+
+.plant-card.offline {
+  border-left-color: #dc2626;
+}
+
+.plant-card.online {
+  border-left-color: #16a34a;
+}
+
+.plant-card p {
+  margin: 6px 0;
+}
+
+.plant-card small {
+  color: #6b7280;
+}
