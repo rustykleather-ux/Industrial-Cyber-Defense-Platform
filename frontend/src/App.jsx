@@ -100,9 +100,19 @@ function App() {
               <td>{device.device_type}</td>
               <td>{device.vendor}</td>
               <td>{device.status}</td>
-              <td>{device.risk_level}</td>
+              <td>
+              <span className={`badge ${device.risk_level?.toLowerCase()}`}>
+              {device.risk_level}
+              </span>
+              </td>
+
               <td>{device.risk_score}</td>
-              <td>{device.calculated_risk}</td>
+
+              <td>
+                <span className={`badge ${device.calculated_risk?.toLowerCase()}`}>
+                  {device.calculated_risk}
+                </span>
+              </td>
               <td>{device.firmware_version}</td>
               <td>{device.location}</td>
               <td>
@@ -134,7 +144,11 @@ function App() {
       <tr key={vuln.id}>
         <td>{vuln.cve_id}</td>
         <td>{vuln.title}</td>
-        <td>{vuln.severity}</td>
+        <td>
+          <span className={`badge ${vuln.severity?.toLowerCase()}`}>
+            {vuln.severity}
+          </span>
+        </td>
         <td>{vuln.cvss_score}</td>
         <td>{vuln.status}</td>
         <td>{vuln.recommendation}</td>
@@ -159,9 +173,10 @@ function App() {
             >
               <h3>{alert.device}</h3>
 
-              <p>
-                <strong>Severity:</strong> {alert.severity}
-              </p>
+              <strong>Severity:</strong>{" "}
+              <span className={`badge ${alert.severity?.toLowerCase()}`}>
+                {alert.severity}
+              </span>
 
               <p>
                 <strong>Alert:</strong> {alert.message}
