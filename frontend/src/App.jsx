@@ -32,7 +32,18 @@ function App() {
       .get("http://127.0.0.1:8000/alerts")
       .then((res) => setAlerts(res.data))
       .catch((err) => console.error("Alerts Error:", err));
+  };  
+
+    const simulateAttack = (attackType) => {
+    axios
+      .post(`http://127.0.0.1:8000/simulate-attack/${attackType}`)
+      .then(() => {
+        loadData(); // Refresh dashboard after simulation
+      })
+      .catch((err) => console.error("Simulation Error:", err));
   };
+  
+
 
  
   return (
@@ -71,6 +82,26 @@ function App() {
   </div>
 
       )}
+
+      <h2>Simulated Attack Engine</h2>
+
+      <div className="attack-buttons">
+        <button onClick={() => simulateAttack("inverter-offline")}>
+          🔴 Inverter Offline
+        </button>
+
+        <button onClick={() => simulateAttack("plc-firmware")}>
+          ⚠️ PLC Firmware Change
+        </button>
+
+        <button onClick={() => simulateAttack("failed-logins")}>
+          🔑 Failed Logins
+        </button>
+
+        <button onClick={() => simulateAttack("network-scan")}>
+          🌐 Network Scan
+        </button>
+      </div>
 
       {/* Device Inventory */}
       <h2>OT Asset Inventory</h2>

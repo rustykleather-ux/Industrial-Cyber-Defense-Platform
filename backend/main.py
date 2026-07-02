@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from services.risk_engine import calculate_device_risk
 from database import Base, engine, SessionLocal
 from models import OTDevice, Alert, Vulnerability
+from datetime import datetime
 
 app = FastAPI(title="Industrial Cyber Defense Platform")
 
@@ -127,4 +128,111 @@ def dashboard(db: Session = Depends(get_db)):
         "critical_alerts": critical_alerts,
         "open_vulnerabilities": open_vulnerabilities,
         "overall_status": "Attention Required" if offline or high_risk or critical_alerts else "Healthy"
+    }
+@app.post("/simulate-attack/{attack_type}")
+def simulate_attack(attack_type: str, db: Session = Depends(get_db)):
+    attack_type = attack_type.lower()
+
+    if attack_type == "inverter-offline":
+        device = db.query(OTDevice).filter(OTDevice.name == "Solar Inverter").first()
+
+        if not device:
+            return {"error": "Solar Inverter not found"}
+
+        device.status = "Offline"
+        device.risk_level = "High"
+        device.last_seen = datetime.utcnow()
+
+        alert = Alert(
+            device_id=device.id,
+            severity="High",
+            alert_type="Communication Loss",
+            message="Simulated attack: Solar inverter communication lost.",
+            status="Open",
+            acknowledged=False
+        )
+
+        db.add(alert)
+        db.commit()
+
+        return {"message": "Simulated inverter communication loss created."}
+
+    if attack_type == "plc-firmware":
+        device = db.query(OTDevice).filter(OTDevice.name == "PLC-2").first()
+
+        if not device:
+            return {"error": "PLC-2 not found"}
+
+        device.firmware_version = "UNKNOWN"
+        device.risk_level = "Critical"
+        device.last_seen = datetime.utcnow()
+
+        alert = Alert(
+            device_id=device.id,
+            severity="Critical",
+            alert_type="Firmware Change",
+            message="Simulated attack: PLC firmware changed unexpectedly.",
+            status="Open",
+            acknowledged=False
+        )
+
+        db.add(alert)
+        db.commit()
+
+        return {"message": "Simulated PLC firmware change created."}
+
+    if attack_type == "failed-logins":
+        device = db.query(OTDevice).filter(OTDevice.name == "Engineering Workstation").first()
+
+        if not device:
+            return {"error": "Engineering Workstation not found"}
+
+        device.risk_level = "Medium"
+        device.last_seen = datetime.utcnow()
+
+        alert = Alert(
+            device_id=device.id,
+            severity="Medium",
+            alert_type="Authentication",
+            message="Simulated attack: Multiple failed login attempts detected.",
+            status="Open",
+            acknowledged=False
+        )
+
+        db.add(alert)
+        db.commit()
+
+        return {"message": "Simulated failed login attack created."}
+
+    if attack_type == "network-scan":
+        device = db.query(OTDevice).filter(OTDevice.name == "SCADA Server").first()
+
+        if not device:
+            return {"error": "SCADA Server not found"}
+
+        device.risk_level = "High"
+        device.last_seen = datetime.utcnow()
+
+        alert = Alert(
+            device_id=device.id,
+            severity="High",
+            alert_type="Network Reconnaissance",
+            message="Simulated attack: Network scan detected against SCADA environment.",
+            status="Open",
+            acknowledged=False
+        )
+
+        db.add(alert)
+        db.commit()
+
+        return {"message": "Simulated network scan created."}
+
+    return {
+        "error": "Unknown attack type",
+        "valid_attack_types": [
+            "inverter-offline",
+            "plc-firmware",
+            "failed-logins",
+            "network-scan"
+        ]
     }
