@@ -278,3 +278,10 @@ th {
 .plant-card small {
   color: #6b7280;
 }
+.reset-button {
+  background: #047857 !important;
+}
+
+.reset-button:hover {
+  background: #065f46 !important;
+}

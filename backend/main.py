@@ -241,60 +241,122 @@ def simulate_attack(attack_type: str, db: Session = Depends(get_db)):
 @app.get("/plant-status")
 def plant_status(db: Session = Depends(get_db)):
     devices = db.query(OTDevice).all()
-
     status_data = []
 
     for device in devices:
+        device_alerts = db.query(Alert).filter(
+            Alert.device_id == device.id,
+            Alert.status == "Open"
+        ).all()
+
+        alert_types = [alert.alert_type for alert in device_alerts]
+
         if device.device_type == "PLC":
+            firmware_attack = "Firmware Change" in alert_types
+
             status_data.append({
                 "device": device.name,
                 "type": device.device_type,
                 "status": device.status,
-                "temperature": random.randint(68, 88),
-                "cpu_usage": random.randint(15, 75),
-                "memory_usage": random.randint(25, 85),
-                "network_latency": random.randint(1, 15),
-                "timestamp": datetime.utcnow()
+                "temperature": random.randint(82, 105) if firmware_attack else random.randint(68, 88),
+                "cpu_usage": random.randint(75, 98) if firmware_attack else random.randint(15, 75),
+                "memory_usage": random.randint(70, 95) if firmware_attack else random.randint(25, 85),
+                "network_latency": random.randint(20, 80) if firmware_attack else random.randint(1, 15),
+                "condition": "Abnormal" if firmware_attack else "Normal",
+                "timestamp": datetime.utcnow().isoformat()
             })
 
         elif device.device_type == "Inverter":
-            if device.status == "Offline":
-                power_output = 0
-            else:
-                power_output = random.randint(350, 475)
+            comm_loss = "Communication Loss" in alert_types
 
             status_data.append({
                 "device": device.name,
                 "type": device.device_type,
                 "status": device.status,
-                "power_output_kw": power_output,
-                "voltage": random.randint(380, 480),
-                "network_latency": random.randint(1, 20),
-                "timestamp": datetime.utcnow()
+                "power_output_kw": 0 if device.status == "Offline" or comm_loss else random.randint(350, 475),
+                "voltage": 0 if device.status == "Offline" or comm_loss else random.randint(380, 480),
+                "network_latency": 999 if device.status == "Offline" or comm_loss else random.randint(1, 20),
+                "condition": "Communication Lost" if device.status == "Offline" or comm_loss else "Normal",
+                "timestamp": datetime.utcnow().isoformat()
             })
 
         elif device.device_type == "SCADA":
+            scan_detected = "Network Reconnaissance" in alert_types
+
             status_data.append({
                 "device": device.name,
                 "type": device.device_type,
                 "status": device.status,
-                "cpu_usage": random.randint(20, 65),
-                "memory_usage": random.randint(35, 80),
-                "active_sessions": random.randint(1, 8),
-                "network_latency": random.randint(1, 10),
-                "timestamp": datetime.utcnow()
+                "cpu_usage": random.randint(70, 95) if scan_detected else random.randint(20, 65),
+                "memory_usage": random.randint(65, 90) if scan_detected else random.randint(35, 80),
+                "active_sessions": random.randint(8, 20) if scan_detected else random.randint(1, 8),
+                "network_latency": random.randint(25, 90) if scan_detected else random.randint(1, 10),
+                "condition": "Network Scan Detected" if scan_detected else "Normal",
+                "timestamp": datetime.utcnow().isoformat()
             })
 
         elif device.device_type == "Workstation":
+            auth_attack = "Authentication" in alert_types
+
             status_data.append({
                 "device": device.name,
                 "type": device.device_type,
                 "status": device.status,
-                "cpu_usage": random.randint(10, 90),
-                "memory_usage": random.randint(30, 90),
-                "failed_logins": random.randint(0, 5),
-                "network_latency": random.randint(1, 25),
-                "timestamp": datetime.utcnow()
+                "cpu_usage": random.randint(50, 90) if auth_attack else random.randint(10, 90),
+                "memory_usage": random.randint(50, 90) if auth_attack else random.randint(30, 90),
+                "failed_logins": random.randint(8, 25) if auth_attack else random.randint(0, 5),
+                "network_latency": random.randint(10, 40) if auth_attack else random.randint(1, 25),
+                "condition": "Authentication Attack" if auth_attack else "Normal",
+                "timestamp": datetime.utcnow().isoformat()
             })
 
     return status_data
+
+
+@app.post("/reset-demo")
+def reset_demo(db: Session = Depends(get_db)):
+    baseline_devices = {
+        "PLC-1": {
+            "status": "Online",
+            "risk_level": "Low",
+            "firmware_version": "1.0.3"
+        },
+        "PLC-2": {
+            "status": "Online",
+            "risk_level": "Low",
+            "firmware_version": "3.2.1"
+        },
+        "Solar Inverter": {
+            "status": "Online",
+            "risk_level": "Low",
+            "firmware_version": "2.4.8"
+        },
+        "Engineering Workstation": {
+            "status": "Online",
+            "risk_level": "Low",
+            "firmware_version": "Windows 11 24H2"
+        },
+        "SCADA Server": {
+            "status": "Online",
+            "risk_level": "Low",
+            "firmware_version": "8.1.35"
+        }
+    }
+
+    for name, values in baseline_devices.items():
+        device = db.query(OTDevice).filter(OTDevice.name == name).first()
+        if device:
+            device.status = values["status"]
+            device.risk_level = values["risk_level"]
+            device.firmware_version = values["firmware_version"]
+            device.last_seen = datetime.utcnow()
+
+    # Remove alerts so they no longer affect calculated risk/topology color
+    db.query(Alert).delete()
+
+    # Remove vulnerabilities so reset returns topology to green baseline
+    db.query(Vulnerability).delete()
+
+    db.commit()
+
+    return {"message": "Demo environment reset to normal baseline."}
