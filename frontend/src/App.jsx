@@ -9,6 +9,7 @@ import LivePlantStatus from "./components/LivePlantStatus";
 import DeviceInventory from "./components/DeviceInventory";
 import VulenrabilityTable from "./components/VulnerabilityTable";
 import AlertsPanel from "./components/AlertsPanel";
+import API from "../../backend/api";
 
 function App() {
   const [devices, setDevices] = useState([]);
@@ -39,39 +40,38 @@ function App() {
   const loadData = () => {
     loadPlantStatus();
 
-    axios
-      .get("http://127.0.0.1:8000/devices")
+    
+      API.get("/devices")
       .then((res) => setDevices(Array.isArray(res.data) ? res.data : []))
       .catch((err) => console.error("Devices Error:", err));
 
-    axios
-      .get("http://127.0.0.1:8000/vulnerabilities")
+      API.get("vulnerabilities")
       .then((res) =>
         setVulnerabilities(Array.isArray(res.data) ? res.data : [])
       )
       .catch((err) => console.error("Vulnerabilities Error:", err));
 
-    axios
-      .get("http://127.0.0.1:8000/dashboard")
+    
+    API.get("/dashboard")
       .then((res) => setDashboard(res.data || null))
       .catch((err) => console.error("Dashboard Error:", err));
 
-    axios
-      .get("http://127.0.0.1:8000/alerts")
+    
+    API.get("/alerts")
       .then((res) => setAlerts(Array.isArray(res.data) ? res.data : []))
       .catch((err) => console.error("Alerts Error:", err));
   };
 
   const simulateAttack = (attackType) => {
-    axios
-      .post(`http://127.0.0.1:8000/simulate-attack/${attackType}`)
+    
+    API.post(`/simulate-attack/${attackType}`)
       .then(() => loadData())
       .catch((err) => console.error("Simulation Error:", err));
   };
 
   const resetDemo = () => {
-    axios
-      .post("http://127.0.0.1:8000/reset-demo")
+    
+    API.post("/reset-demo")
       .then(() => loadData())
       .catch((err) => console.error("Reset Error:", err));
     
