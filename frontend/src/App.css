@@ -285,3 +285,47 @@ th {
 .reset-button:hover {
   background: #065f46 !important;
 }
+.incident-center {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 35px;
+}
+
+.incident-card {
+  background: white;
+  border-radius: 10px;
+  padding: 18px;
+  border-left: 6px solid #6b7280;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.incident-card.critical {
+  border-left-color: #dc2626;
+}
+
+.incident-card.high {
+  border-left-color: #ea580c;
+}
+
+.incident-card.medium {
+  border-left-color: #eab308;
+}
+
+.incident-card.low {
+  border-left-color: #16a34a;
+}
+
+.incident-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.incident-empty {
+  background: white;
+  padding: 18px;
+  border-radius: 10px;
+  color: #6b7280;
+}

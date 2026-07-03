@@ -9,7 +9,9 @@ import LivePlantStatus from "./components/LivePlantStatus";
 import DeviceInventory from "./components/DeviceInventory";
 import VulnerabilityTable from "./components/VulnerabilityTable";
 import AlertsPanel from "./components/AlertsPanel";
+import IncidentCenter from "./components/IncidentCenter";
 
+import { getIncidents } from "./services/incidentService";
 import { getDevices } from "./services/deviceService";
 import { getDashboard } from "./services/dashboardService";
 import { getAlerts } from "./services/alertService";
@@ -26,11 +28,16 @@ function App() {
   const [alerts, setAlerts] = useState([]);
   const [vulnerabilities, setVulnerabilities] = useState([]);
   const [plantStatus, setPlantStatus] = useState([]);
+  const [incidents, setIncidents] = useState([]);
 
   useEffect(() => {
     loadData();
   }, []);
 
+  getIncidents()
+  .then((res) => setIncidents(Array.isArray(res.data) ? res.data : []))
+  .catch((err) => console.error("Incidents Error:", err));
+  
   useEffect(() => {
     const interval = setInterval(() => {
       loadPlantStatus();
@@ -47,6 +54,7 @@ function App() {
 
   const loadData = () => {
     loadPlantStatus();
+
 
     getDevices()
       .then((res) => setDevices(Array.isArray(res.data) ? res.data : []))
@@ -66,6 +74,7 @@ function App() {
       .then((res) => setAlerts(Array.isArray(res.data) ? res.data : []))
       .catch((err) => console.error("Alerts Error:", err));
   };
+   
 
   const simulateAttack = (attackType) => {
     simulateAttackRequest(attackType)
@@ -90,6 +99,8 @@ function App() {
       <NetworkTopology devices={devices} />
 
       <LivePlantStatus plantStatus={plantStatus} />
+      
+      <IncidentCenter incidents={incidents} />
 
       <DeviceInventory devices={devices} />
 

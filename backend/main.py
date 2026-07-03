@@ -312,6 +312,38 @@ def plant_status(db: Session = Depends(get_db)):
 
     return status_data
 
+@app.get("/incidents")
+def get_incidents(db: Session = Depends(get_db)):
+    alerts = db.query(Alert).order_by(Alert.timestamp.desc()).all()
+
+    incidents = []
+
+    for alert in alerts:
+        incidents.append({
+            "id": alert.id,
+            "time": alert.timestamp.isoformat() if alert.timestamp else None,
+            "severity": alert.severity,
+            "device": alert.device.name if alert.device else "Unknown Device",
+            "alert_type": alert.alert_type,
+            "message": alert.message,
+            "status": alert.status,
+            "acknowledged": alert.acknowledged,
+            "mitre_technique": get_mitre_mapping(alert.alert_type)
+        })
+
+    return incidents
+
+
+def get_mitre_mapping(alert_type):
+    mappings = {
+        "Communication Loss": "T0881 - Service Stop",
+        "Firmware Change": "T0859 - Modify Controller Tasking",
+        "Authentication": "T0812 - Default Credentials / Valid Accounts",
+        "Network Reconnaissance": "T0842 - Network Service Scanning",
+        "General": "T0800 - Activate Firmware Update Mode"
+    }
+
+    return mappings.get(alert_type, "Unmapped")
 
 @app.post("/reset-demo")
 def reset_demo(db: Session = Depends(get_db)):
@@ -342,6 +374,8 @@ def reset_demo(db: Session = Depends(get_db)):
             "firmware_version": "8.1.35"
         }
     }
+
+    
 
     for name, values in baseline_devices.items():
         device = db.query(OTDevice).filter(OTDevice.name == name).first()
