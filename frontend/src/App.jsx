@@ -12,10 +12,13 @@ import AlertsPanel from "./components/AlertsPanel";
 import IncidentCenter from "./components/IncidentCenter";
 
 
+
 import {
   getIncidents,
   acknowledgeIncidentRequest,
   assignIncidentRequest,
+  updateIncidentNotesRequest,
+  closeIncidentRequest,
 } from "./services/incidentService";
 import { getDevices } from "./services/deviceService";
 import { getDashboard } from "./services/dashboardService";
@@ -34,6 +37,14 @@ function App() {
   const [vulnerabilities, setVulnerabilities] = useState([]);
   const [plantStatus, setPlantStatus] = useState([]);
   const [incidents, setIncidents] = useState([]);
+  const updateIncidentNotes = async (incidentId, notes) => {
+  try {
+    await updateIncidentNotesRequest(incidentId, notes);
+    await loadData();
+  } catch (err) {
+    console.error("Update Notes Error:", err);
+  }
+};
   const assignIncident = async (incidentId, assignedTo) => {
   try {
     await assignIncidentRequest(incidentId, assignedTo);
@@ -42,6 +53,15 @@ function App() {
     console.error("Assign Incident Error:", err);
   }
 };
+const closeIncident = async (incidentId, closedBy) => {
+  try {
+    await closeIncidentRequest(incidentId, closedBy);
+    await loadData();
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 
   useEffect(() => {
     loadData();
@@ -126,6 +146,8 @@ function App() {
       incidents={incidents}
       acknowledgeIncident={acknowledgeIncident}
       assignIncident={assignIncident}
+      updateIncidentNotes={updateIncidentNotes}
+      closeIncident={closeIncident}
 />
 
       <DeviceInventory devices={devices} />

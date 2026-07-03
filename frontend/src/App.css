@@ -434,4 +434,46 @@ th {
 
 .assign-button:hover {
   background: #374151;
+}.notes-textarea {
+  width: 100%;
+  min-height: 130px;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  resize: vertical;
+  font-family: Arial, sans-serif;
+}
+
+.notes-button {
+  margin-top: 10px;
+  background: #047857;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.notes-button:hover {
+  background: #065f46;
+}.close-button {
+    margin-top:15px;
+    width:100%;
+    padding:12px;
+    background:#dc2626;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.close-button:hover {
+    background:#b91c1c;
+}
+
+.close-button:disabled {
+    background:#6b7280;
+    cursor:not-allowed;
 }

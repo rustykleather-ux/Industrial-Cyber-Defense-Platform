@@ -34,6 +34,9 @@ class Alert(Base):
     status = Column(String, default="Open")
     acknowledged = Column(Boolean, default=False)
     assigned_to = Column(String, default="Unassigned")
+    investigation_notes = Column(String, default="")
+    closed_by = Column(String, default="")
+    closed_at = Column(DateTime, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
     
 

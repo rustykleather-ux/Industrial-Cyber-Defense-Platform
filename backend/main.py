@@ -64,6 +64,36 @@ def get_devices(db: Session = Depends(get_db)):
 
     return results
 
+class CloseIncidentRequest(BaseModel):
+    closed_by: str
+
+
+@app.post("/incidents/{incident_id}/close")
+def close_incident(
+    incident_id: int,
+    request: CloseIncidentRequest,
+    db: Session = Depends(get_db)
+):
+    alert = db.query(Alert).filter(Alert.id == incident_id).first()
+
+    if not alert:
+        return {"error": "Incident not found"}
+
+    alert.status = "Closed"
+    alert.closed_by = request.closed_by
+    alert.closed_at = datetime.utcnow()
+
+    db.add(alert)
+    db.commit()
+    db.refresh(alert)
+
+    return {
+        "message": "Incident closed",
+        "incident_id": alert.id,
+        "status": alert.status,
+        "closed_by": alert.closed_by,
+        "closed_at": alert.closed_at.isoformat()
+    }
 
 @app.get("/alerts")
 def get_alerts(db: Session = Depends(get_db)):
@@ -317,7 +347,12 @@ def plant_status(db: Session = Depends(get_db)):
 
 @app.get("/incidents")
 def get_incidents(db: Session = Depends(get_db)):
-    alerts = db.query(Alert).order_by(Alert.timestamp.desc()).all()
+    alerts = (
+        db.query(Alert)
+        .filter(Alert.status != "Closed")
+        .order_by(Alert.timestamp.desc())
+        .all()
+    )
 
     incidents = []
 
@@ -332,6 +367,9 @@ def get_incidents(db: Session = Depends(get_db)):
             "status": alert.status,
             "acknowledged": alert.acknowledged,
             "assigned_to": alert.assigned_to,
+            "investigation_notes": alert.investigation_notes,
+            "closed_by": alert.closed_by,
+            "closed_at": alert.closed_at.isoformat() if alert.closed_at else None,
             "mitre_technique": get_mitre_mapping(alert.alert_type)
         })
 
@@ -370,6 +408,33 @@ def get_mitre_mapping(alert_type):
     return mappings.get(alert_type, "Unmapped")
 
 from pydantic import BaseModel
+
+class IncidentNotesRequest(BaseModel):
+    investigation_notes: str
+
+
+@app.post("/incidents/{incident_id}/notes")
+def update_incident_notes(
+    incident_id: int,
+    request: IncidentNotesRequest,
+    db: Session = Depends(get_db)
+):
+    alert = db.query(Alert).filter(Alert.id == incident_id).first()
+
+    if not alert:
+        return {"error": "Incident not found"}
+
+    alert.investigation_notes = request.investigation_notes
+
+    db.add(alert)
+    db.commit()
+    db.refresh(alert)
+
+    return {
+        "message": "Investigation notes updated",
+        "incident_id": alert.id,
+        "investigation_notes": alert.investigation_notes
+    }
 
 class AssignIncidentRequest(BaseModel):
     assigned_to: str
