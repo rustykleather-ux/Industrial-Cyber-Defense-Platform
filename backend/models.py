@@ -33,7 +33,9 @@ class Alert(Base):
     message = Column(String, nullable=False)
     status = Column(String, default="Open")
     acknowledged = Column(Boolean, default=False)
+    assigned_to = Column(String, default="Unassigned")
     timestamp = Column(DateTime, default=datetime.utcnow)
+    
 
     device = relationship("OTDevice", back_populates="alerts")
 

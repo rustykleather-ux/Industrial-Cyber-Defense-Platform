@@ -11,9 +11,11 @@ import VulnerabilityTable from "./components/VulnerabilityTable";
 import AlertsPanel from "./components/AlertsPanel";
 import IncidentCenter from "./components/IncidentCenter";
 
+
 import {
   getIncidents,
   acknowledgeIncidentRequest,
+  assignIncidentRequest,
 } from "./services/incidentService";
 import { getDevices } from "./services/deviceService";
 import { getDashboard } from "./services/dashboardService";
@@ -32,6 +34,14 @@ function App() {
   const [vulnerabilities, setVulnerabilities] = useState([]);
   const [plantStatus, setPlantStatus] = useState([]);
   const [incidents, setIncidents] = useState([]);
+  const assignIncident = async (incidentId, assignedTo) => {
+  try {
+    await assignIncidentRequest(incidentId, assignedTo);
+    await loadData();
+  } catch (err) {
+    console.error("Assign Incident Error:", err);
+  }
+};
 
   useEffect(() => {
     loadData();
@@ -112,8 +122,10 @@ function App() {
 
       <LivePlantStatus plantStatus={plantStatus} />
       
-      <IncidentCenter  incidents={incidents}
-  acknowledgeIncident={acknowledgeIncident}
+      <IncidentCenter  
+      incidents={incidents}
+      acknowledgeIncident={acknowledgeIncident}
+      assignIncident={assignIncident}
 />
 
       <DeviceInventory devices={devices} />

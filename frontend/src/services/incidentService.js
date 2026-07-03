@@ -7,3 +7,8 @@ export const getIncidents = () => {
 export const acknowledgeIncidentRequest = (incidentId) => {
   return API.post(`/incidents/${incidentId}/acknowledge`);
 };
+export const assignIncidentRequest = (incidentId, assignedTo) => {
+  return API.post(`/incidents/${incidentId}/assign`, {
+    assigned_to: assignedTo,
+  });
+};

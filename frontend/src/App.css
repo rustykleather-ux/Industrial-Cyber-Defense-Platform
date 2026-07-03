@@ -407,3 +407,31 @@ th {
   background: #9ca3af;
   cursor: not-allowed;
 }
+.assign-label {
+  display: block;
+  margin-top: 14px;
+  font-weight: bold;
+}
+
+.assign-select {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+.assign-button {
+  margin-top: 10px;
+  background: #111827;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.assign-button:hover {
+  background: #374151;
+}

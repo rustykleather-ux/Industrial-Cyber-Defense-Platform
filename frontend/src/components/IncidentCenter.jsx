@@ -1,10 +1,13 @@
 import { useState } from "react";
 
-function IncidentCenter({ incidents, acknowledgeIncident }) {
+function IncidentCenter({ incidents, acknowledgeIncident, assignIncident }) {
   const [selectedIncident, setSelectedIncident] = useState(null);
 
+  const [assignedTo, setAssignedTo] = useState("Unassigned");
   const handleAcknowledge = async () => {
   if (!selectedIncident) return;
+
+ 
 
   console.log("Clicked acknowledge:", selectedIncident.id);
 
@@ -29,7 +32,10 @@ function IncidentCenter({ incidents, acknowledgeIncident }) {
             <div
               key={incident.id}
               className={`incident-card ${(incident.severity || "low").toLowerCase()}`}
-              onClick={() => setSelectedIncident(incident)}
+              onClick={() => {
+                setSelectedIncident(incident);
+                setAssignedTo(incident.assigned_to || "Unassigned");
+                }}
             >
               <div className="incident-header">
                 <span className={`badge ${(incident.severity || "low").toLowerCase()}`}>
@@ -107,6 +113,39 @@ function IncidentCenter({ incidents, acknowledgeIncident }) {
                           >
                               {selectedIncident.acknowledged ? "Acknowledged" : "Acknowledge Incident"}
                           </button>
+                <p>
+  <strong>Assigned To:</strong> {selectedIncident.assigned_to || "Unassigned"}
+</p>
+
+<label className="assign-label">
+  Assign Analyst
+</label>
+
+<select
+  className="assign-select"
+  value={assignedTo}
+  onChange={(e) => setAssignedTo(e.target.value)}
+>
+  <option value="Unassigned">Unassigned</option>
+  <option value="Rusty Folsom">Rusty Folsom</option>
+  <option value="SOC Analyst">SOC Analyst</option>
+  <option value="OT Engineer">OT Engineer</option>
+  <option value="Incident Response Team">Incident Response Team</option>
+</select>
+
+<button
+  className="assign-button"
+  onClick={async () => {
+    await assignIncident(selectedIncident.id, assignedTo);
+
+    setSelectedIncident({
+      ...selectedIncident,
+      assigned_to: assignedTo,
+    });
+  }}
+>
+  Save Assignment
+</button>
             </div>
 
             <div className="drawer-section">

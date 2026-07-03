@@ -5,6 +5,9 @@ from services.risk_engine import calculate_device_risk
 from database import Base, engine, SessionLocal
 from models import OTDevice, Alert, Vulnerability
 from datetime import datetime
+from pydantic import BaseModel
+class AssignIncidentRequest(BaseModel):
+    assigned_to: str
 import random
 
 app = FastAPI(title="Industrial Cyber Defense Platform")
@@ -328,6 +331,7 @@ def get_incidents(db: Session = Depends(get_db)):
             "message": alert.message,
             "status": alert.status,
             "acknowledged": alert.acknowledged,
+            "assigned_to": alert.assigned_to,
             "mitre_technique": get_mitre_mapping(alert.alert_type)
         })
 
@@ -364,6 +368,34 @@ def get_mitre_mapping(alert_type):
     }
 
     return mappings.get(alert_type, "Unmapped")
+
+from pydantic import BaseModel
+
+class AssignIncidentRequest(BaseModel):
+    assigned_to: str
+
+
+@app.post("/incidents/{incident_id}/assign")
+def assign_incident(
+    incident_id: int,
+    request: AssignIncidentRequest,
+    db: Session = Depends(get_db)
+):
+    alert = db.query(Alert).filter(Alert.id == incident_id).first()
+
+    if not alert:
+        return {"error": "Incident not found"}
+
+    alert.assigned_to = request.assigned_to
+    db.add(alert)
+    db.commit()
+    db.refresh(alert)
+
+    return {
+        "message": "Incident assigned",
+        "incident_id": alert.id,
+        "assigned_to": alert.assigned_to
+    }
 
 @app.post("/reset-demo")
 def reset_demo(db: Session = Depends(get_db)):
