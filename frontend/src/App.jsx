@@ -1,15 +1,24 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import "./App.css";
+
 import Header from "./components/Header";
 import DashboardCards from "./components/DashboardCards";
 import DemoControls from "./components/DemoControls";
 import NetworkTopology from "./components/NetworkTopology";
 import LivePlantStatus from "./components/LivePlantStatus";
 import DeviceInventory from "./components/DeviceInventory";
-import VulenrabilityTable from "./components/VulnerabilityTable";
+import VulnerabilityTable from "./components/VulnerabilityTable";
 import AlertsPanel from "./components/AlertsPanel";
-import API from "../../backend/api";
+
+import { getDevices } from "./services/deviceService";
+import { getDashboard } from "./services/dashboardService";
+import { getAlerts } from "./services/alertService";
+import { getVulnerabilities } from "./services/vulnerabilityService";
+import { getPlantStatus } from "./services/telemetryService";
+import {
+  simulateAttackRequest,
+  resetDemoRequest,
+} from "./services/simulationService";
 
 function App() {
   const [devices, setDevices] = useState([]);
@@ -31,8 +40,7 @@ function App() {
   }, []);
 
   const loadPlantStatus = () => {
-    axios
-      .get("http://127.0.0.1:8000/plant-status")
+    getPlantStatus()
       .then((res) => setPlantStatus(Array.isArray(res.data) ? res.data : []))
       .catch((err) => console.error("Plant Status Error:", err));
   };
@@ -40,48 +48,35 @@ function App() {
   const loadData = () => {
     loadPlantStatus();
 
-    
-      API.get("/devices")
+    getDevices()
       .then((res) => setDevices(Array.isArray(res.data) ? res.data : []))
       .catch((err) => console.error("Devices Error:", err));
 
-      API.get("vulnerabilities")
+    getVulnerabilities()
       .then((res) =>
         setVulnerabilities(Array.isArray(res.data) ? res.data : [])
       )
       .catch((err) => console.error("Vulnerabilities Error:", err));
 
-    
-    API.get("/dashboard")
+    getDashboard()
       .then((res) => setDashboard(res.data || null))
       .catch((err) => console.error("Dashboard Error:", err));
 
-    
-    API.get("/alerts")
+    getAlerts()
       .then((res) => setAlerts(Array.isArray(res.data) ? res.data : []))
       .catch((err) => console.error("Alerts Error:", err));
   };
 
   const simulateAttack = (attackType) => {
-    
-    API.post(`/simulate-attack/${attackType}`)
+    simulateAttackRequest(attackType)
       .then(() => loadData())
       .catch((err) => console.error("Simulation Error:", err));
   };
 
   const resetDemo = () => {
-    
-    API.post("/reset-demo")
+    resetDemoRequest()
       .then(() => loadData())
       .catch((err) => console.error("Reset Error:", err));
-    
-    const risk = device.calculated_risk || device.risk_level;
-
-    if (risk === "Critical") return "critical";
-    if (risk === "High") return "warning";
-    if (risk === "Medium") return "medium";
-
-    return "healthy";
   };
 
   return (
@@ -98,10 +93,9 @@ function App() {
 
       <DeviceInventory devices={devices} />
 
-      <VulenrabilityTable vulnerabilities={vulnerabilities} />
+      <VulnerabilityTable vulnerabilities={vulnerabilities} />
 
       <AlertsPanel alerts={alerts} />
-      
     </div>
   );
 }
